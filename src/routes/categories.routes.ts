@@ -1,31 +1,24 @@
 import { Router } from "express";
-import { v4 as uuidV4 } from "uuid";
+import multer from "multer";
 
-import { Category } from "../model/Category";
-import { CategoriesRepository } from "../repositories/CategoriesRepository";
+import { createCategoryControler } from "../modules/cars/useCases/createCategory";
+import { importCategoryController } from "../modules/cars/useCases/importCategory";
+import { listCategoriesController } from "../modules/cars/useCases/listCategories";
 
 const categoriesRoutes = Router();
 
-const categoriesRepository = new CategoriesRepository();
+const upload = multer({ dest: "./tmp" });
 
 categoriesRoutes.post("/", (request, response) => {
-    const { name, description } = request.body;
-
-    const categoryAlreadyExists = categoriesRepository.findByName(name);
-
-    if (categoryAlreadyExists) {
-        return response.status(400).json({ error: "Category already exists!" });
-    }
-
-    categoriesRepository.create({ name, description });
-
-    return response.status(201).send();
+    return createCategoryControler.handle(request, response);
 });
 
 categoriesRoutes.get("/", (request, response) => {
-    const all = categoriesRepository.list();
+    return listCategoriesController.handle(request, response);
+});
 
-    return response.json(all);
+categoriesRoutes.post("/import", upload.single("file"), (request, response) => {
+    return importCategoryController.handle(request, response);
 });
 
 export { categoriesRoutes };
